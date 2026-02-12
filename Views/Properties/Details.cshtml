@@ -1,0 +1,324 @@
+﻿@model RealEstateAdmin.Data.Property
+@{
+    ViewData["Title"] = "Détails du Bien";
+    ViewData["ActivePage"] = "Properties";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour à  la liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne principale - Détails du bien -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg mb-4">
+                <!-- Image principale -->
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="@Model.Title" 
+                         class="card-img-top" style="height: 400px; object-fit: cover;">
+                }
+                else
+                {
+                    <div class="bg-secondary text-white text-center d-flex align-items-center justify-content-center" 
+                         style="height: 400px;">
+                        <div>
+                            <i class="fas fa-image fa-5x mb-3"></i>
+                            <p class="h5">Aucune image disponible</p>
+                        </div>
+                    </div>
+                }
+
+                <div class="card-body">
+                    <!-- Titre et badges -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2 class="card-title mb-0">@Model.Title</h2>
+                        <div>
+                            @if (Model.Status == "À vendre")
+                            {
+                                <span class="badge bg-success fs-6">@Model.Status</span>
+                            }
+                            else if (Model.Status == "À louer")
+                            {
+                                <span class="badge bg-primary fs-6">@Model.Status</span>
+                            }
+                            else if (Model.Status == "Vendu")
+                            {
+                                <span class="badge bg-secondary fs-6">@Model.Status</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-dark fs-6">@Model.Status</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Prix -->
+                    <div class="mb-4">
+                        <h3 class="text-primary">
+                            <i class="fas fa-tag"></i> @Model.Price.ToString("N0") DT
+                        </h3>
+                    </div>
+
+                    <!-- Informations principales -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-info-circle text-info"></i> Type de bien</h5>
+                            <p class="lead">
+                                <span class="badge bg-info fs-6">@Model.Type</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-check-circle text-success"></i> Disponibilité</h5>
+                            <p class="lead">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check"></i> Disponible
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-times"></i> Non disponible
+                                    </span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Adresse -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-map-marker-alt text-danger"></i> Adresse</h5>
+                        <p class="lead">
+                            @Model.Address
+                        </p>
+                        @if (!string.IsNullOrEmpty(Model.City))
+                        {
+                            <p class="mb-1">
+                                <strong>Ville:</strong> @Model.City
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ZipCode))
+                        {
+                            <p class="mb-1">
+                                <strong>Code Postal:</strong> @Model.ZipCode
+                            </p>
+                        }
+                    </div>
+
+                    <!-- Caractéristiques du bien -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-ruler-combined text-primary"></i> Caractéristiques</h5>
+                                    <ul class="list-unstyled">
+                                        @if (Model.Area.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-square text-info"></i> <strong>Superficie:</strong> @Model.Area.Value.ToString("F0") mÂ²
+                                            </li>
+                                        }
+                                        @if (Model.Bedrooms.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-bed text-info"></i> <strong>Chambres:</strong> @Model.Bedrooms
+                                            </li>
+                                        }
+                                        @if (Model.Bathrooms.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-bath text-info"></i> <strong>Salles de bain:</strong> @Model.Bathrooms
+                                            </li>
+                                        }
+                                        @if (Model.Floor.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-arrow-up text-info"></i> <strong>Étage:</strong> @Model.Floor
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-star text-warning"></i> Aménités</h5>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            @if (Model.HasParking)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Parking</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Parking</span>
+                                            }
+                                        </li>
+                                        <li class="mb-2">
+                                            @if (Model.HasGarden)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Jardin</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Jardin</span>
+                                            }
+                                        </li>
+                                        <li class="mb-2">
+                                            @if (Model.HasBalcony)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Balcon</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Balcon</span>
+                                            }
+                                        </li>
+                                        <li class="mb-2">
+                                            @if (Model.HasElevator)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Ascenseur</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Ascenseur</span>
+                                            }
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-4">
+                            <h5><i class="fas fa-file-alt text-secondary"></i> Description</h5>
+                            <p class="text-justify" style="white-space: pre-line;">@Model.Description</p>
+                        </div>
+                    }
+                    <!-- Informations supplémentaires -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-calendar"></i> Informations</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <strong>Ajouté le:</strong> @Model.CreatedDate.ToString("dd MMMM yyyy")
+                                    </p>
+                                </div>
+                                @if (Model.ModifiedDate.HasValue)
+                                {
+                                    <div class="col-md-6">
+                                        <p class="mb-2">
+                                            <strong>Modifié le:</strong> @Model.ModifiedDate.Value.ToString("dd MMMM yyyy")
+                                        </p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Agent"))
+                    {
+                        <div class="mt-4">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Modifier
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+<!-- Colonne latérale - Réservation -->
+        <div class="col-lg-4">
+            @if (!(User.IsInRole("Admin") || User.IsInRole("Agent")))
+            {
+                <div class="card shadow-lg sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-calendar-check"></i> Réserver une visite
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.IsActive && Model.Status != "Vendu" && Model.Status != "Loué")
+                        {
+                            <p class="mb-4">
+                                <i class="fas fa-info-circle"></i> 
+                                Réservez un créneau horaire pour visiter ce bien.
+                            </p>
+                            
+                            <a asp-controller="Reservations" asp-action="Create" asp-route-propertyId="@Model.Id" 
+                               class="btn btn-primary w-100 btn-lg">
+                                <i class="fas fa-calendar-plus"></i> Réserver une visite
+                            </a>
+                            
+                            <hr class="my-3" />
+                            
+                            <div class="text-center">
+                                <p class="small text-muted mb-2">
+                                    <i class="fas fa-clock"></i> Créneaux disponibles
+                                </p>
+                                <p class="small text-muted">
+                                    Du lundi au samedi<br/>
+                                    De 9h00 à  18h00
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                @if (!Model.IsActive)
+                                {
+                                    <p class="mb-0">Ce bien n'est actuellement pas disponible.</p>
+                                }
+                                else if (Model.Status == "Vendu")
+                                {
+                                    <p class="mb-0">Ce bien a déjà été vendu.</p>
+                                }
+                                else if (Model.Status == "Loué")
+                                {
+                                    <p class="mb-0">Ce bien a déjà été loué.</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-lg">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-shield-alt"></i>
+                            <p class="mb-0">En tant qu'administrateur ou agent, vous ne pouvez pas faire de réservation.</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-justify {
+        text-align: justify;
+    }
+</style>

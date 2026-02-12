@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Accueil";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4">Bienvenue sur Real Estate Admin</h1>
+    <p class="lead">Système de gestion de biens immobiliers</p>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="mt-4">
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-lg">
+                <i class="fas fa-chart-line"></i> Accéder au Dashboard
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="mt-4">
+            <a asp-area="Identity" asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Se connecter
+            </a>
+        </div>
+    }
+</div>

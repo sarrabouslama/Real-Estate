@@ -1,0 +1,301 @@
+﻿@model List<RealEstateAdmin.Controllers.UserViewModel>
+@{
+    ViewData["Title"] = "Gestion des Utilisateurs";
+    ViewData["ActivePage"] = "Users";
+    var roleFilter = ViewBag.RoleFilter as string;
+    var statusFilter = ViewBag.StatusFilter as string;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users"></i> Gestion des Utilisateurs</h2>
+    </div>
+
+    @if (!string.IsNullOrEmpty(TempData["SuccessMessage"] as string))
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Recherche Dynamique -->
+    <div class="mb-3">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-white">
+                <i class="fas fa-search text-primary"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-start-0"
+                   placeholder="Recherche : Nom, email, nom d'utilisateur..." value="@ViewBag.SearchTerm" />
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#filterCollapse">
+                <i class="fas fa-filter"></i> Filtres
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtres Avancés (Collapsible) -->
+    <div class="collapse @(roleFilter != null || statusFilter != null ? "show" : "")" id="filterCollapse">
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="get" id="filterForm" class="row g-3">
+                    <input type="hidden" name="SearchTerm" id="hiddenSearchTerm" value="@ViewBag.SearchTerm" />
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="fas fa-user-tag"></i> Rôle</label>
+                        <select class="form-select" name="RoleFilter">
+                            <option value="">Tous les rôles</option>
+                            <option value="Admin" selected="@(roleFilter == "Admin")">Admin</option>
+                            <option value="Agent" selected="@(roleFilter == "Agent")">Agent</option>
+                            <option value="User" selected="@(roleFilter == "User")">Utilisateur</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="fas fa-toggle-on"></i> Statut</label>
+                        <select class="form-select" name="StatusFilter">
+                            <option value="">Tous</option>
+                            <option value="Active" selected="@(statusFilter == "Active")">Actif</option>
+                            <option value="Inactive" selected="@(statusFilter == "Inactive")">Inactif</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Appliquer
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> Réinitialiser
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="alert alert-info mb-3" id="resultsCount">
+            <i class="fas fa-info-circle"></i> <strong id="countNumber">@Model.Count()</strong> utilisateur(s) trouvés
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Statut</th>
+                            <th>Réservations</th>
+                            <th>Date de création</th>
+                            <th style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        @foreach (var user in Model)
+                        {
+                            <tr class="user-item @(!user.IsActive ? "table-secondary" : "")"
+                                data-search="@(user.UserName?.ToLower()) @(user.FullName?.ToLower()) @(user.Email?.ToLower())">
+                                <td>
+                                    <i class="fas fa-user"></i>
+                                    <strong>@user.UserName</strong>
+                                    @if (!string.IsNullOrEmpty(user.FullName))
+                                    {
+                                        <br>
+
+                                        <small class="text-muted">@user.FullName</small>
+                                    }
+                                    @if (!string.IsNullOrEmpty(user.Phone))
+                                    {
+                                        <br>
+
+                                        <small><i class="fas fa-phone"></i> @user.Phone</small>
+                                    }
+                                </td>
+                                <td>@user.Email</td>
+                                <td>
+                                    @if (user.Role == "Admin")
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-crown"></i> Admin
+                                        </span>
+                                    }
+                                    else if (user.Role == "Agent")
+                                    {
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-user-tie"></i> Agent
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-user"></i> User
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Actif
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-ban"></i> Inactif
+                                        </span>
+                                    }
+                                    @if (user.EmailConfirmed)
+                                    {
+                                        <br>
+
+                                        <span class="badge bg-info mt-1">
+                                            <i class="fas fa-envelope-circle-check"></i> Email Confirmé
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        @user.ReservationCount réservation(s)
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>
+                                        <i class="fas fa-calendar"></i> @user.CreatedDate.ToString("dd/MM/yyyy")<br>
+                                        @if (user.LastLoginDate.HasValue)
+                                        {
+                                            <span class="text-muted">
+                                                <i class="fas fa-sign-in-alt"></i>
+                                                @user.LastLoginDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                            </span>
+                                        }
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning"
+                                               title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="post" asp-action="ToggleActive" asp-route-id="@user.Id"
+                                              class="d-inline">
+                                            @if (user.IsActive)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-secondary" title="Désactiver">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-success" title="Activer">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            }
+                                        </form>
+                                        <form method="post" asp-action="ResetPassword" asp-route-id="@user.Id"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Êtes-vous sûr de vouloir réinitialiser le mot de passe de @user.UserName ?');">
+                                            <button type="submit" class="btn btn-sm btn-info"
+                                                    title="Réinitialiser le mot de passe">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" asp-action="Delete" asp-route-id="@user.Id" class="d-inline"
+                                              onsubmit="return confirm('êtes-vous sûr de vouloir supprimer l\'utilisateur @user.UserName ? Cette action supprimera également toutes ses réservations et notifications.');">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Aucun utilisateur trouvé.
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5><i class="fas fa-chart-bar"></i> Statistiques des Utilisateurs</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h3 class="text-primary">@Model.Count</h3>
+                    <p>Total Utilisateurs</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-success">@Model.Count(u => u.IsActive)</h3>
+                    <p>Utilisateurs Actifs</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-danger">@Model.Count(u => u.Role == "Admin")</h3>
+                    <p>Administrateurs</p>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="text-info">@Model.Sum(u => u.ReservationCount)</h3>
+                    <p>Total Réservations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+                                        // Recherche dynamique côté client (sans rafraîchir la page)
+                                        const searchInput = document.getElementById('searchInput');
+                                        const hiddenSearchTerm = document.getElementById('hiddenSearchTerm');
+                                        const userItems = document.querySelectorAll('.user-item');
+                                        const countNumber = document.getElementById('countNumber');
+
+                                        function filterUsers() {
+                                            const searchTerm = searchInput.value.toLowerCase().trim();
+                                            let visibleCount = 0;
+
+                                            userItems.forEach(function (item) {
+                                                const searchData = item.getAttribute('data-search');
+                                                if (searchData && searchData.includes(searchTerm)) {
+                                                    item.style.display = '';
+                                                    visibleCount++;
+                                                } else {
+                                                    item.style.display = 'none';
+                                                }
+                                            });
+
+                                            // Mettre à  jour le compteur
+                                            if (countNumber) {
+                                                countNumber.textContent = visibleCount;
+                                            }
+
+                                            // Garder le focus
+                                            searchInput.focus();
+                                        }
+
+                                        searchInput.addEventListener('input', filterUsers);
+
+                                        // Synchroniser la recherche avec les filtres (soumettre le formulaire pour les filtres avancés)
+                                        document.getElementById('filterForm').addEventListener('submit', function (e) {
+                                            hiddenSearchTerm.value = searchInput.value;
+                                        });
+    </script>
+}

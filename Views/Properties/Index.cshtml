@@ -1,0 +1,334 @@
+﻿@model List<RealEstateAdmin.Data.Property>
+@{
+    ViewData["Title"] = "Liste des Biens";
+    ViewData["ActivePage"] = "Properties";
+    var searchTerm = ViewBag.SearchTerm as string;
+    var statusFilter = ViewBag.StatusFilter as string;
+    var typeFilter = ViewBag.TypeFilter as string;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-home"></i> @(User.IsInRole("Admin") || User.IsInRole("Agent") ? "Gestion des Biens" : "Biens Disponibles")</h2>
+        @if (User.IsInRole("Admin") || User.IsInRole("Agent"))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Ajouter un Bien
+            </a>
+        }
+    </div>
+
+    @if (TempData["UserReservationSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["UserReservationSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["AdminSuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["AdminSuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Recherche Dynamique -->
+    <div class="mb-3">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-white">
+                <i class="fas fa-search text-primary"></i>
+            </span>
+            <input type="text" id="searchInput" class="form-control border-start-0" 
+                   placeholder="Recherche : Titre, adresse, ville, description..." 
+                   value="@searchTerm" />
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                <i class="fas fa-filter"></i> Filtres
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtres Avancés (Collapsible) -->
+    <div class="collapse @(typeFilter != null || statusFilter != null ? "show" : "")" id="filterCollapse">
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="get" id="filterForm" class="row g-3">
+                    <input type="hidden" name="SearchTerm" id="hiddenSearchTerm" value="@searchTerm" />
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="fas fa-filter"></i> Type</label>
+                        <select class="form-select" name="TypeFilter">
+                            <option value="">Tous les types</option>
+                            <option value="Vente" selected="@(typeFilter == "Vente")">Vente</option>
+                            <option value="Location" selected="@(typeFilter == "Location")">Location</option>
+                        </select>
+                    </div>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Agent"))
+                    {
+                        <div class="col-md-4">
+                            <label class="form-label"><i class="fas fa-toggle-on"></i> Statut</label>
+                            <select class="form-select" name="StatusFilter">
+                                <option value="">Tous les statuts</option>
+                                <option value="Active" selected="@(statusFilter == "Active")">Actif</option>
+                                <option value="Inactive" selected="@(statusFilter == "Inactive")">Inactif</option>
+                            </select>
+                        </div>
+                    }
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Appliquer
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> Réinitialiser
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    @if (Model.Any())
+    {
+        <div class="alert alert-info mb-3" id="resultsCount">
+            <i class="fas fa-info-circle"></i> <strong id="countNumber">@Model.Count()</strong> bien(s) trouvé(s)
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        @if (User.IsInRole("Admin") || User.IsInRole("Agent"))
+        {
+            <!-- Vue Admin/Agent: Tableau complet -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Image</th>
+                                    <th>Titre</th>
+                                    <th>Type</th>
+                                    <th>Prix</th>
+                                    <th>Adresse</th>
+                                    <th>Statut</th>
+                                    <th>Actif</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="propertiesTableBody">
+                                @foreach (var property in Model)
+                                {
+                                    <tr class="property-item @(!property.IsActive ? "table-secondary" : "")" 
+                                        data-search="@(property.Title?.ToLower()) @(property.Address?.ToLower()) @(property.City?.ToLower()) @(property.Description?.ToLower())">
+                                        <td>@property.Id</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(property.ImageUrl))
+                                            {
+                                                <img src="@property.ImageUrl" alt="@property.Title" 
+                                                     style="width: 60px; height: 60px; object-fit: cover;" 
+                                                     class="rounded">
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-secondary rounded text-white text-center" 
+                                                     style="width: 60px; height: 60px; line-height: 60px;">
+                                                    <i class="fas fa-image"></i>
+                                                </div>
+                                            }
+                                        </td>
+                                        <td>@property.Title</td>
+                                        <td>
+                                            <span class="badge bg-info">@property.Type</span>
+                                        </td>
+                                        <td>@property.Price.ToString("N0") DT</td>
+                                        <td>@property.Address</td>
+                                        <td>
+                                            @if (property.Status == "À vendre")
+                                            {
+                                                <span class="badge bg-success">@property.Status</span>
+                                            }
+                                            else if (property.Status == "À louer")
+                                            {
+                                                <span class="badge bg-primary">@property.Status</span>
+                                            }
+                                            else if (property.Status == "Vendu")
+                                            {
+                                                <span class="badge bg-secondary">@property.Status</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-dark">@property.Status</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (property.IsActive)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Oui
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times"></i> Non
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-action="Details" asp-route-id="@property.Id" 
+                                               class="btn btn-sm btn-info me-1" title="Voir les détails">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@property.Id" 
+                                               class="btn btn-sm btn-warning" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Vue Utilisateur: Cards responsives -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                @foreach (var property in Model.Where(p => p.IsActive && (p.Status == "À vendre" || p.Status == "À louer")))
+                {
+                    <div class="col property-item" 
+                         data-search="@(property.Title?.ToLower()) @(property.Address?.ToLower()) @(property.City?.ToLower()) @(property.Description?.ToLower())">
+                        <div class="card h-100 shadow-sm hover-card">
+                            @if (!string.IsNullOrEmpty(property.ImageUrl))
+                            {
+                                <img src="@property.ImageUrl" class="card-img-top" alt="@property.Title" 
+                                     style="height: 200px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                     style="height: 200px;">
+                                    <i class="fas fa-image fa-3x"></i>
+                                </div>
+                            }
+                            
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title mb-0">@property.Title</h5>
+                                    @if (property.Status == "À vendre")
+                                    {
+                                        <span class="badge bg-success">Vente</span>
+                                    }
+                                    else if (property.Status == "À louer")
+                                    {
+                                        <span class="badge bg-primary">Location</span>
+                                    }
+                                </div>
+                                
+                                <p class="text-muted mb-2">
+                                    <i class="fas fa-map-marker-alt"></i> @property.Address
+                                </p>
+                                
+                                <h4 class="text-primary mb-3">
+                                    @property.Price.ToString("N0") DT
+                                    @if (property.Status == "À louer")
+                                    {
+                                        <small class="text-muted">/mois</small>
+                                    }
+                                </h4>
+                                
+                                <p class="card-text flex-grow-1">
+                                    @if (!string.IsNullOrEmpty(property.Description))
+                                    {
+                                        @(property.Description.Length > 100 ? property.Description.Substring(0, 100) + "..." : property.Description)
+                                    }
+                                </p>
+                                
+                                <div class="d-flex gap-2 mt-auto">
+                                    <a asp-action="Details" asp-route-id="@property.Id" 
+                                       class="btn btn-outline-primary flex-fill">
+                                        <i class="fas fa-eye"></i> Voir détails
+                                    </a>
+                                    <a asp-controller="Reservations" asp-action="Create" asp-route-propertyId="@property.Id" 
+                                       class="btn btn-primary flex-fill">
+                                        <i class="fas fa-calendar-check"></i> Réserver
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            @if (User.IsInRole("Admin") || User.IsInRole("Agent"))
+            {
+                <text>Aucun bien immobilier trouvé. <a asp-action="Create" class="alert-link">Ajouter le premier bien</a></text>
+            }
+            else
+            {
+                <text>Aucun bien disponible pour le moment. Revenez plus tard !</text>
+            }
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Recherche dynamique côté client (sans rafraîchir la page)
+        const searchInput = document.getElementById('searchInput');
+        const hiddenSearchTerm = document.getElementById('hiddenSearchTerm');
+        const propertyItems = document.querySelectorAll('.property-item');
+        const countNumber = document.getElementById('countNumber');
+        
+        function filterProperties() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            propertyItems.forEach(function(item) {
+                const searchData = item.getAttribute('data-search');
+                if (searchData && searchData.includes(searchTerm)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Mettre à  jour le compteur
+            if (countNumber) {
+                countNumber.textContent = visibleCount;
+            }
+            
+            // Garder le focus
+            searchInput.focus();
+        }
+        
+        searchInput.addEventListener('input', filterProperties);
+        
+        // Synchroniser la recherche avec les filtres (soumettre le formulaire pour les filtres avancés)
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            hiddenSearchTerm.value = searchInput.value;
+        });
+    </script>
+}

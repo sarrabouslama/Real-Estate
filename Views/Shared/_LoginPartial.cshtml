@@ -1,0 +1,44 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using RealEstateAdmin.Data
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item">
+            <a class="nav-link @(ViewData["ActivePage"]?.ToString() == "Notifications" ? "active" : "")"
+                   asp-controller="Notifications" asp-action="Index">
+                <i class="fas fa-bell"></i> Notifications
+                @{
+                    var notifCount = await Component.InvokeAsync("NotificationBadge");
+                    if (notifCount.ToString() != "0")
+                    {
+                        <span class="badge bg-danger ms-1">@notifCount</span>
+                    }
+                }
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ViewData["ActivePage"]?.ToString() == "Profile" ? "active" : "")" asp-controller="Profile"
+                   asp-action="Index">
+                <i class="fas fa-user"></i> @UserManager.GetUserName(User)
+            </a>
+        </li>
+        <li class="nav-item">
+            <form class="form-inline" asp-area="Identity" asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="nav-link btn btn-link text-light">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-controller="Account" asp-action="Login">
+                <i class="fas fa-sign-in-alt"></i> Connexion
+            </a>
+        </li>
+    }
+</ul>
