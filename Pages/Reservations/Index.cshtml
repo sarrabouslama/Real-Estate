@@ -133,105 +133,243 @@
                             </tr>
                         </thead>
                         <tbody id="reservationsTableBody">
-                            @foreach (var reservation in Model.Reservations)
-                            {
-                                var rowClass = reservation.Status switch
-                                {
-                                    "Accepté" => "table-success",
-                                    "En attente" => "table-warning",
-                                    "Refusé" => "table-danger",
-                                    _ => ""
-                                };
+                            @{
+                                var today = Model.Reservations.Where(r => r.ReservationDate.Date == DateTime.Today).ToList();
+                                var upcoming = Model.Reservations.Where(r => r.ReservationDate.Date > DateTime.Today).ToList();
+                                var past = Model.Reservations.Where(r => r.ReservationDate.Date < DateTime.Today).ToList();
+                            }
 
-                                <tr class="reservation-item @rowClass" 
-                                    data-search="@(reservation.Property?.Title?.ToLower()) @(reservation.Property?.Address?.ToLower()) @(reservation.User?.UserName?.ToLower()) @(reservation.User?.Email?.ToLower()) @(reservation.User?.FullName?.ToLower())">
-                                    <td>
-                                        <i class="fas fa-calendar"></i>
-                                        @reservation.ReservationDate.ToString("dd/MM/yyyy")
-                                        @if (reservation.ReservationDate.Date == DateTime.Today)
-                                        {
-                                            <span class="badge bg-info ms-1">Aujourd'hui</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <i class="fas fa-clock"></i>
-                                        @reservation.TimeSlot.ToString(@"hh\:mm")
-                                    </td>
-                                    <td>
-                                        <strong>@reservation.Property?.Title</strong>
-                                        <br />
-                                        <small class="text-muted">@reservation.Property?.Address</small>
-                                    </td>
-                                    <td>@reservation.User?.UserName</td>
-                                    <td>
-                                        <a href="mailto:@reservation.User?.Email">@reservation.User?.Email</a>
-                                    </td>
-                                    <td>
-                                        @if (reservation.Status == "En attente")
-                                        {
-                                            <span class="badge bg-warning text-dark">
-                                                <i class="fas fa-clock"></i> En attente
-                                            </span>
-                                        }
-                                        else if (reservation.Status == "Accepté")
-                                        {
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-check"></i> Accepté
-                                            </span>
-                                        }
-                                        else if (reservation.Status == "Refusé")
-                                        {
-                                            <span class="badge bg-danger">
-                                                <i class="fas fa-times"></i> Refusé
-                                            </span>
-                                        }
-                                        else if (reservation.Status == "Annulée")
-                                        {
-                                            <span class="badge bg-secondary">
-                                                <i class="fas fa-ban"></i> Annulée
-                                            </span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(reservation.AdminRemark))
-                                        {
-                                            <small>@reservation.AdminRemark</small>
-                                        }
-                                        else
-                                        {
-                                            <small class="text-muted">-</small>
-                                        }
-                                    </td>
-                                    <td>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-success me-1 btn-accept-reservation" 
-                                                data-reservation-id="@reservation.Id"
-                                                title="Accepter">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-danger me-1" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#refuseModal@(reservation.Id)"
-                                                title="Refuser">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        <form method="post" asp-page-handler="Delete" asp-route-id="@reservation.Id" 
-                                              class="d-inline" 
-                                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?');">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                            <!-- AUJOURD'HUI -->
+                            @if (today.Any())
+                            {
+                                <tr class="table fw-bold">
+                                    <td colspan="8">
+                                        <i class="fas fa-calendar-day"></i> <strong>Aujourd'hui (@today.Count)</strong>
                                     </td>
                                 </tr>
+                                @foreach (var reservation in today)
+                                {
+                                    var rowClass = reservation.Status switch
+                                    {
+                                        "Accepté" => "table-success",
+                                        "En attente" => "table-warning",
+                                        "Refusé" => "table-danger",
+                                        "Annulée" => "table-secondary",
+                                        _ => ""
+                                    };
+
+                                    <tr class="reservation-item @rowClass" 
+                                        data-search="@(reservation.Property?.Title?.ToLower()) @(reservation.Property?.Address?.ToLower()) @(reservation.User?.UserName?.ToLower()) @(reservation.User?.Email?.ToLower()) @(reservation.User?.FullName?.ToLower())">
+                                        <td>
+                                            <i class="fas fa-calendar"></i>
+                                            @reservation.ReservationDate.ToString("dd/MM/yyyy")
+                                            <span class="badge bg-info ms-1">Aujourd'hui</span>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-clock"></i>
+                                            @reservation.TimeSlot.ToString(@"hh\:mm")
+                                        </td>
+                                        <td>
+                                            <strong>@reservation.Property?.Title</strong>
+                                            <br />
+                                            <small class="text-muted">@reservation.Property?.Address</small>
+                                        </td>
+                                        <td>@reservation.User?.UserName</td>
+                                        <td>
+                                            <a href="mailto:@reservation.User?.Email">@reservation.User?.Email</a>
+                                        </td>
+                                        <td>
+                                            @if (reservation.Status == "En attente")
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-clock"></i> En attente
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Accepté")
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Accepté
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Refusé")
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times"></i> Refusé
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Annulée")
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-ban"></i> Annulée
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(reservation.AdminRemark))
+                                            {
+                                                <small>@reservation.AdminRemark</small>
+                                            }
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                }
+                            }
+
+                            <!-- À VENIR -->
+                            @if (upcoming.Any())
+                            {
+                                <tr class="table fw-bold">
+                                    <td colspan="8">
+                                        <i class="fas fa-arrow-right"></i> <strong>À venir (@upcoming.Count)</strong>
+                                    </td>
+                                </tr>
+                                @foreach (var reservation in upcoming)
+                                {
+                                    var rowClass = reservation.Status switch
+                                    {
+                                        "Accepté" => "table-success",
+                                        "En attente" => "table-warning",
+                                        "Refusé" => "table-danger",
+                                        "Annulée" => "table-secondary",
+                                        _ => ""
+                                    };
+
+                                    <tr class="reservation-item @rowClass" 
+                                        data-search="@(reservation.Property?.Title?.ToLower()) @(reservation.Property?.Address?.ToLower()) @(reservation.User?.UserName?.ToLower()) @(reservation.User?.Email?.ToLower()) @(reservation.User?.FullName?.ToLower())">
+                                        <td>
+                                            <i class="fas fa-calendar"></i>
+                                            @reservation.ReservationDate.ToString("dd/MM/yyyy")
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-clock"></i>
+                                            @reservation.TimeSlot.ToString(@"hh\:mm")
+                                        </td>
+                                        <td>
+                                            <strong>@reservation.Property?.Title</strong>
+                                            <br />
+                                            <small class="text-muted">@reservation.Property?.Address</small>
+                                        </td>
+                                        <td>@reservation.User?.UserName</td>
+                                        <td>
+                                            <a href="mailto:@reservation.User?.Email">@reservation.User?.Email</a>
+                                        </td>
+                                        <td>
+                                            @if (reservation.Status == "En attente")
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-clock"></i> En attente
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Accepté")
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Accepté
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Refusé")
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times"></i> Refusé
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Annulée")
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-ban"></i> Annulée
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(reservation.AdminRemark))
+                                            {
+                                                <small>@reservation.AdminRemark</small>
+                                            }
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                }
+                            }
+
+                            <!-- PASSÉES -->
+                            @if (past.Any())
+                            {
+                                <tr class="table fw-bold">
+                                    <td colspan="8">
+                                        <i class="fas fa-history"></i> <strong>Passées (@past.Count)</strong>
+                                    </td>
+                                </tr>
+                                @foreach (var reservation in past)
+                                {
+                                    var rowClass = reservation.Status switch
+                                    {
+                                        "Accepté" => "table-success",
+                                        "En attente" => "table-warning",
+                                        "Refusé" => "table-danger",
+                                        "Annulée" => "table-secondary",
+                                        _ => ""
+                                    };
+
+                                    <tr class="reservation-item @rowClass" 
+                                        data-search="@(reservation.Property?.Title?.ToLower()) @(reservation.Property?.Address?.ToLower()) @(reservation.User?.UserName?.ToLower()) @(reservation.User?.Email?.ToLower()) @(reservation.User?.FullName?.ToLower())">
+                                        <td>
+                                            <i class="fas fa-calendar"></i>
+                                            @reservation.ReservationDate.ToString("dd/MM/yyyy")
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-clock"></i>
+                                            @reservation.TimeSlot.ToString(@"hh\:mm")
+                                        </td>
+                                        <td>
+                                            <strong>@reservation.Property?.Title</strong>
+                                            <br />
+                                            <small class="text-muted">@reservation.Property?.Address</small>
+                                        </td>
+                                        <td>@reservation.User?.UserName</td>
+                                        <td>
+                                            <a href="mailto:@reservation.User?.Email">@reservation.User?.Email</a>
+                                        </td>
+                                        <td>
+                                            @if (reservation.Status == "En attente")
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-clock"></i> En attente
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Accepté")
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Accepté
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Refusé")
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times"></i> Refusé
+                                                </span>
+                                            }
+                                            else if (reservation.Status == "Annulée")
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-ban"></i> Annulée
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(reservation.AdminRemark))
+                                            {
+                                                <small>@reservation.AdminRemark</small>
+                                            }
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                }
                             }
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        
+
         <!-- Modals (en dehors du tableau) -->
         @foreach (var reservation in Model.Reservations)
         {

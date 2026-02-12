@@ -53,12 +53,8 @@ public class Property
     public bool HasBalcony { get; set; } = false;
     public bool HasElevator { get; set; } = false;
     
-    // Images (stored as JSON array or semicolon-separated URLs)
     [StringLength(2000)]
     public string? ImageUrl { get; set; }
-    
-    [StringLength(5000)]
-    public string? AdditionalImages { get; set; } // Multiple images separated by semicolons
     
     // Availability & Status
     public bool IsActive { get; set; } = true;

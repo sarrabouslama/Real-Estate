@@ -95,10 +95,109 @@
 
                     <!-- Adresse -->
                     <div class="mb-4">
-                        <h5><i class="fas fa-map-marker-alt text-danger"></i> Localisation</h5>
+                        <h5><i class="fas fa-map-marker-alt text-danger"></i> Adresse</h5>
                         <p class="lead">
                             @Model.Property.Address
                         </p>
+                        @if (!string.IsNullOrEmpty(Model.Property.City))
+                        {
+                            <p class="mb-1">
+                                <strong>Ville:</strong> @Model.Property.City
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Property.ZipCode))
+                        {
+                            <p class="mb-1">
+                                <strong>Code Postal:</strong> @Model.Property.ZipCode
+                            </p>
+                        }
+                    </div>
+
+                    <!-- Caractéristiques du bien -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-ruler-combined text-primary"></i> Caractéristiques</h5>
+                                    <ul class="list-unstyled">
+                                        @if (Model.Property.Area.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-square text-info"></i> <strong>Superficie:</strong> @Model.Property.Area.Value.ToString("F0") m²
+                                            </li>
+                                        }
+                                        @if (Model.Property.Bedrooms.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-bed text-info"></i> <strong>Chambres:</strong> @Model.Property.Bedrooms
+                                            </li>
+                                        }
+                                        @if (Model.Property.Bathrooms.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-bath text-info"></i> <strong>Salles de bain:</strong> @Model.Property.Bathrooms
+                                            </li>
+                                        }
+                                        @if (Model.Property.Floor.HasValue)
+                                        {
+                                            <li class="mb-2">
+                                                <i class="fas fa-arrow-up text-info"></i> <strong>Étage:</strong> @Model.Property.Floor
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-star text-warning"></i> Aménités</h5>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            @if (Model.Property.HasParking)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Parking</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Parking</span>
+                                            }
+                                        </li>
+                                        <li class="mb-2">
+                                            @if (Model.Property.HasGarden)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Jardin</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Jardin</span>
+                                            }
+                                        </li>
+                                        <li class="mb-2">
+                                            @if (Model.Property.HasBalcony)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Balcon</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Balcon</span>
+                                            }
+                                        </li>
+                                        <li class="mb-2">
+                                            @if (Model.Property.HasElevator)
+                                            {
+                                                <i class="fas fa-check-circle text-success"></i> <strong>Ascenseur</strong>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-secondary"></i> <span class="text-muted">Ascenseur</span>
+                                            }
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Description -->
@@ -109,7 +208,6 @@
                             <p class="text-justify" style="white-space: pre-line;">@Model.Property.Description</p>
                         </div>
                     }
-
                     <!-- Informations supplémentaires -->
                     <div class="card bg-light">
                         <div class="card-body">

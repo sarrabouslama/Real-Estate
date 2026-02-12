@@ -35,7 +35,16 @@ public class MyReservationsModel : PageModel
                 .Include(r => r.Property)
                 .Where(r => r.UserId == userId)
                 .ToListAsync())
-                .OrderByDescending(r => r.ReservationDate)
+                .OrderBy(r =>
+                {
+                    // Aujourd'hui first (0)
+                    if (r.ReservationDate.Date == DateTime.Today) return 0;
+                    // Then upcoming (1)
+                    if (r.ReservationDate.Date > DateTime.Today) return 1;
+                    // Then past (2)
+                    return 2;
+                })
+                .ThenBy(r => r.ReservationDate)
                 .ThenBy(r => r.TimeSlot)
                 .ToList();
 

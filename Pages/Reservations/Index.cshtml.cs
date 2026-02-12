@@ -55,9 +55,9 @@ public class IndexModel : PageModel
         if (!string.IsNullOrWhiteSpace(SearchTerm))
         {
             var searchLower = SearchTerm.ToLower();
-            query = query.Where(r => r.Property.Title.ToLower().Contains(searchLower)
-                                  || r.User.FullName.ToLower().Contains(searchLower)
-                                  || r.User.Email.ToLower().Contains(searchLower));
+            query = query.Where(r => (r.Property != null && r.Property.Title.ToLower().Contains(searchLower))
+                                  || (r.User != null && r.User.FullName != null && r.User.FullName.ToLower().Contains(searchLower))
+                                  || (r.User != null && r.User.Email != null && r.User.Email.ToLower().Contains(searchLower)));
         }
         
         // Filtre de statut
@@ -78,7 +78,16 @@ public class IndexModel : PageModel
         }
         
         Reservations = (await query.ToListAsync())
-            .OrderByDescending(r => r.ReservationDate)
+            .OrderBy(r =>
+            {
+                // Aujourd'hui first (0)
+                if (r.ReservationDate.Date == DateTime.Today) return 0;
+                // Then upcoming (1)
+                if (r.ReservationDate.Date > DateTime.Today) return 1;
+                // Then past (2)
+                return 2;
+            })
+            .ThenBy(r => r.ReservationDate)
             .ThenBy(r => r.TimeSlot)
             .ToList();
 
