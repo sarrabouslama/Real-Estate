@@ -157,6 +157,24 @@ public class ReservationsController : Controller
     [Authorize(Roles = "User")]
     public async Task<IActionResult> Create(CreateReservationViewModel model)
     {
+        Console.WriteLine("========== CREATE RESERVATION POST CALLED ==========");
+        Console.WriteLine($"PropertyId: {model.PropertyId}");
+        Console.WriteLine($"ReservationDate: {model.ReservationDate}");
+        Console.WriteLine($"TimeSlot: '{model.TimeSlot}'");
+        Console.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
+
+        if (!ModelState.IsValid)
+        {
+            Console.WriteLine("ModelState ERRORS:");
+            foreach (var error in ModelState)
+            {
+                if (error.Value.Errors.Any())
+                {
+                    Console.WriteLine($"  {error.Key}: {string.Join(", ", error.Value.Errors.Select(e => e.ErrorMessage))}");
+                }
+            }
+        }
+
         var property = await _context.Properties.FindAsync(model.PropertyId);
 
         if (property == null)
@@ -428,7 +446,7 @@ public class MyReservationsViewModel
 
 public class CreateReservationViewModel
 {
-    public Property Property { get; set; } = null!;
+    public Property? Property { get; set; }
     public int PropertyId { get; set; }
     public DateTime ReservationDate { get; set; }
     public string TimeSlot { get; set; } = string.Empty;

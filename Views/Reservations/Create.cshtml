@@ -16,16 +16,16 @@
                 <div class="card-body">
                     <!-- Informations du bien -->
                     <div class="alert alert-info">
-                        <h5><i class="fas fa-home"></i> @Model.Property.Title</h5>
+                        <h5><i class="fas fa-home"></i> @Model.Property?.Title</h5>
                         <p class="mb-1">
-                            <i class="fas fa-map-marker-alt"></i> @Model.Property.Address
+                            <i class="fas fa-map-marker-alt"></i> @Model.Property?.Address
                         </p>
                         <p class="mb-0">
-                            <strong>Prix:</strong> @Model.Property.Price.ToString("N0") DT
+                            <strong>Prix:</strong> @Model.Property?.Price.ToString("N0") DT
                         </p>
                     </div>
 
-                    <form method="post" asp-action="Create">
+                    <form method="post" asp-action="Create" id="reservationForm">
                         <input type="hidden" asp-for="PropertyId" />
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
@@ -96,85 +96,85 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const dateInput = document.getElementById('reservationDate');
-                        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
-                        const submitBtn = document.getElementById('submitBtn');
-                        const propertyId = @Model.Property.Id;
-                        const form = document.querySelector('form');
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const dateInput = document.getElementById('reservationDate');
+                            const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+                            const submitBtn = document.getElementById('submitBtn');
+                            const propertyId = @(Model.Property?.Id ?? 0);
+                            const form = document.getElementById('reservationForm');
 
-                        // Vérifier si le bouton est initialement désactivé
-                        if (@Model.AvailableTimeSlots.Count == 0) {
-                            submitBtn.disabled = true;
-                        }
+                            console.log('Reservation form initialized');
 
-                        // Debug: Afficher quand le formulaire est soumis
-                        form.addEventListener('submit', function (e) {
-                            const selectedSlot = document.querySelector('input[name="TimeSlot"]:checked');
-                            console.log('Form submit - Selected slot:', selectedSlot ? selectedSlot.value : 'none');
+                            // Écouter la soumission du formulaire
+                            form.addEventListener('submit', function (e) {
+                                const selectedSlot = document.querySelector('input[name="TimeSlot"]:checked');
+                                console.log('FORM SUBMITTING...');
+                                console.log('Selected slot:', selectedSlot ? selectedSlot.value : 'NONE');
+                                console.log('PropertyId:', document.querySelector('input[name="PropertyId"]').value);
+                                console.log('Date:', dateInput.value);
+                                // Ne pas empêcher la soumission - laisser faire
+                            });
 
-                            if (!selectedSlot) {
-                                e.preventDefault();
-                                alert('Veuillez sélectionner un créneau horaire.');
-                                return false;
-                            }
-                        });
-
-                        dateInput.addEventListener('change', async function () {
-                            const selectedDate = this.value;
-                            if (!selectedDate) return;
-
-                            // Charger les créneaux disponibles via AJAX
-                            try {
-                                const response = await fetch(`/Reservations/GetAvailableTimeSlots?propertyId=${propertyId}&date=${selectedDate}`);
-
-                                if (!response.ok) {
-                                    throw new Error('Erreur serveur: ' + response.status);
-                                }
-
-                                const availableSlots = await response.json();
-                                console.log('Available slots:', availableSlots);
-
-                                if (availableSlots.length === 0) {
-                                    timeSlotsContainer.innerHTML = `
-                                        <div class="alert alert-warning">
-                                            <i class="fas fa-exclamation-triangle"></i> 
-                                            Aucun créneau disponible pour cette date. Veuillez choisir une autre date.
-                                        </div>`;
-                                    submitBtn.disabled = true;
-                                } else {
-                                    let html = '<div class="row g-2">';
-                                    availableSlots.forEach(slot => {
-                                        const slotId = slot.replace(':', '');
-                                        html += `
-                                            <div class="col-6 col-md-4">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" 
-                                                           type="radio" 
-                                                           name="TimeSlot" 
-                                                           value="${slot}" 
-                                                           id="slot_${slotId}"
-                                                           required>
-                                                    <label class="form-check-label" for="slot_${slotId}">
-                                                        ${slot}
-                                                    </label>
-                                                </div>
-                                            </div>`;
-                                    });
-                                    html += '</div>';
-                                    timeSlotsContainer.innerHTML = html;
-                                    submitBtn.disabled = false;
-                                }
-                            } catch (error) {
-                                console.error('Erreur lors du chargement des créneaux:', error);
-                                timeSlotsContainer.innerHTML = `
-                                    <div class="alert alert-danger">
-                                        <i class="fas fa-exclamation-circle"></i> 
-                                        Erreur lors du chargement des créneaux. Veuillez réessayer.
-                                    </div>`;
+                            // Vérifier si le bouton est initialement désactivé
+                            if (@Model.AvailableTimeSlots.Count == 0) {
                                 submitBtn.disabled = true;
                             }
+
+                            dateInput.addEventListener('change', async function () {
+                                const selectedDate = this.value;
+                                if (!selectedDate) return;
+
+                                // Charger les créneaux disponibles via AJAX
+                                try {
+                                    const response = await fetch(`/Reservations/GetAvailableTimeSlots?propertyId=${propertyId}&date=${selectedDate}`);
+
+                                    if (!response.ok) {
+                                        throw new Error('Erreur serveur: ' + response.status);
+                                    }
+
+                                    const availableSlots = await response.json();
+                                    console.log('Available slots:', availableSlots);
+
+                                    if (availableSlots.length === 0) {
+                                        timeSlotsContainer.innerHTML = `
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle"></i> 
+                                                Aucun créneau disponible pour cette date. Veuillez choisir une autre date.
+                                            </div>`;
+                                        submitBtn.disabled = true;
+                                    } else {
+                                        let html = '<div class="row g-2">';
+                                        availableSlots.forEach(slot => {
+                                            const slotId = slot.replace(':', '');
+                                            html += `
+                                                <div class="col-6 col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="radio" 
+                                                               name="TimeSlot" 
+                                                               value="${slot}" 
+                                                               id="slot_${slotId}"
+                                                               required>
+                                                        <label class="form-check-label" for="slot_${slotId}">
+                                                            ${slot}
+                                                        </label>
+                                                    </div>
+                                                </div>`;
+                                        });
+                                        html += '</div>';
+                                        timeSlotsContainer.innerHTML = html;
+                                        submitBtn.disabled = false;
+                                    }
+                                } catch (error) {
+                                    console.error('Erreur lors du chargement des créneaux:', error);
+                                    timeSlotsContainer.innerHTML = `
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-circle"></i> 
+                                            Erreur lors du chargement des créneaux. Veuillez réessayer.
+                                        </div>`;
+                                    submitBtn.disabled = true;
+                                }
+                            });
                         });
-                    });
     </script>
 }
